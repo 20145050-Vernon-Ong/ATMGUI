@@ -15,8 +15,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -24,19 +26,29 @@ import java.util.regex.Pattern;
 public class ATMGUI extends Application {
 
 	TextField userName = new TextField();
-	TextField pinNum = new TextField();
+	PasswordField pinNum = new PasswordField();
 	TextField balance = new TextField();
-	
+	TextField withDraw = new TextField();
+	TextField deposit = new TextField();
+
 	Label user = new Label();
 	Label pin = new Label();
 	Label bal = new Label();
+	Label with = new Label();
+	Label dep = new Label();
+	Label labelOutput = new Label();
 	
 	FlowPane pane = new FlowPane();
+	FlowPane pane1 = new FlowPane();
 	
-	Button display = new Button();
 	Button close = new Button();
-	
+	Button logIn = new Button();
+	Button viewBal = new Button();
+	Button witD = new Button();
+	Button depD = new Button();
+
 	ArrayList<user> userList = new ArrayList<user>();
+	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -53,59 +65,121 @@ public class ATMGUI extends Application {
 		
 		userName.setPrefColumnCount(30);
 		pinNum.setPrefColumnCount(30);
-		balance.setPrefColumnCount(30);
 		
 		user.setText("Enter your Username");
 		pin.setText("Enter your PIN");
-		bal.setText("Your current balance");
-		display.setText("Display Balance");
 		close.setText("close ATM");
-	
-		balance.setEditable(false);
-		
-		pane.getChildren().addAll(user, userName, pin, pinNum, bal, balance, display, close);
+		logIn.setText("Log In");
+			
+		pane.getChildren().addAll(user, userName, pin, pinNum, logIn, close, labelOutput);
 		pane.setAlignment(Pos.CENTER);
-		
-		EventHandler<ActionEvent> db = (ActionEvent ae) -> balance();
-		display.setOnAction(db);
 		
 		EventHandler<ActionEvent> exit = (ActionEvent ae) -> exitWin();
 		close.setOnAction(exit);
 		
+		EventHandler<ActionEvent> log = (ActionEvent ae) -> login(primaryStage);
+		logIn.setOnAction(log);
+		
 		Scene mainscene = new Scene(pane);
 		
 		primaryStage.setTitle("ATM System");
-		primaryStage.setWidth(425);
+		primaryStage.setWidth(375);
 		primaryStage.setHeight(400);
 		primaryStage.setScene(mainscene);
 		primaryStage.show();
 	}
 	
-	public void balance() {
-		
+	public void login(Stage secondaryStage) {
 		String regex = "[0-9]{6}";
 		boolean isTrue = false;
 		boolean matchID = Pattern.matches(regex, pinNum.getText());
 		for (user i : userList) {
-			if (String.valueOf(userName.getText()).equals(i.getUser()) && matchID == true) {
-				balance.setText(String.valueOf(i.getBalance()));
-				isTrue = true;
-			} 
+			if (String.valueOf(userName.getText()).equals(i.getUser()) && matchID == true) {			
+				bal.setText("Your current balance");
+				balance.setPrefColumnCount(30);
+				viewBal.setText("View Balance");
+				
+				balance.setEditable(false);
+				
+				with.setText("\nWithdraw from Balance");
+				withDraw.setPrefColumnCount(30);
+				witD.setText("WithDraw");
+				
+				dep.setText("\nDeposit");
+				deposit.setPrefColumnCount(30);
+				depD.setText("Deposit into Balance");
+					
+				pane1.getChildren().addAll(bal, balance, viewBal, with, withDraw, witD, dep, deposit, depD);
+				pane1.setAlignment(Pos.CENTER);
+				
+				EventHandler<ActionEvent> accBal = (ActionEvent ae) -> balance();
+				viewBal.setOnAction(accBal);
+				
+				EventHandler<ActionEvent> withBal = (ActionEvent ae) -> withDraw();
+				witD.setOnAction(withBal);
+				
+				EventHandler<ActionEvent> depBal = (ActionEvent ae) -> deposit();
+				depD.setOnAction(depBal);
+				
+				Scene pane = new Scene(pane1);
+				secondaryStage.setTitle("ATM System");
+				secondaryStage.setWidth(375);
+				secondaryStage.setHeight(400);			
+				secondaryStage.setScene(pane);
+				secondaryStage.show();
+			}
 		}
-			
+		
 		if (isTrue != true) {
-			balance.setText("Invalid value");
+			labelOutput.setText("Invalid value");
 			if (userName.getText().isEmpty() && pinNum.getText().isEmpty()){
-				balance.setText("Username and PIN is empty");
+				labelOutput.setText("Username and PIN is empty");
 			} else if (userName.getText().isEmpty()) {
-				balance.setText("Username is empty");
+				labelOutput.setText("Username is empty");
 			} else if (pinNum.getText().isEmpty()){
-				balance.setText("PIN is empty");
-		    }
-	   }	
+				labelOutput.setText("PIN is empty");
+		    } 
+	    }
+		
 	}
-	
+		
 	public static void exitWin() {
 		System.exit(1);
+	}
+	
+	public void withDraw() {
+		for (user i : userList) {
+			if (userName.getText().equals(i.getUser())) {
+				if (Double.valueOf(withDraw.getText()) < i.getBalance()) {
+					double acct = i.getBalance() - Double.valueOf(withDraw.getText());
+					i.setBalance(acct);
+					withDraw.setText("You have withdrawn " + String.valueOf(acct));
+				} else {
+					withDraw.setText("Your account balance is insuficient");
+				}
+				
+			}
+			
+		}
+	}
+	
+	public void deposit() {
+		for (user i : userList) {
+			if (userName.getText().equals(i.getUser())) {
+				double acct = i.getBalance() + Double.valueOf(deposit.getText());
+				i.setBalance(acct);
+				deposit.setText("You have deposit " + String.valueOf(acct));
+			}
+			
+		}
+	}
+	
+	public void balance() {
+		for (user i : userList) {
+			if (userName.getText().equals(i.getUser())) {
+				balance.setText(String.valueOf(i.getBalance()));
+			}
+			
+		}
 	}
 }
